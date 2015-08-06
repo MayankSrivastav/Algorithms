@@ -7,11 +7,9 @@
 using namespace std;
 
 #define REP(i, a, b) for (int i = int(a); i <= int(b); i++)
-
-const int V = 7;
 vector<int> pset(1000);
-typedef pair<int, int> ii;
-priority_queue< pair<int, ii> > edgeList;
+typedef pair<double, double> ii;
+priority_queue< pair<double, ii> > edgeList;
 
 void InitSet(int _size)
 {
@@ -21,47 +19,51 @@ void InitSet(int _size)
 }
 
 // Union-Find Disjoint set 
-int FindSet(int i)
+int FindSet(double i)
 {
 	return (pset[i] == i) ? i : (pset[i] = FindSet(pset[i]));
 }
 
-void UnionSet(int i, int j)
+void UnionSet(double i, double j)
 {
 	pset[FindSet(i)] = FindSet(j);
 }
 
-bool IsSameSet(int i, int j)
+bool IsSameSet(double i, double j)
 {
 	return FindSet(i) == FindSet(j);
 }
 
 // Ksruskal's main funtion
-void TransportSystem(int& r_cost, int& rr_cost, int r)
+int TransportSystem(double& r_cost, double& rr_cost, int r, int n)
 {		
 	//int r_cost = 0, rr_cost = 0;
-	InitSet(V); // initially all vertices in disjoint set
+	int states = 1;
+	InitSet(n); // initially all vertices in disjoint set
 
 	while (!edgeList.empty()) {
-		pair<int, ii> front = edgeList.top();
+		pair<double, ii> front = edgeList.top();
 		edgeList.pop();
 
 		if (!IsSameSet(front.second.first, front.second.second)) { // if no cycle, in the disjoint set
 			//mst_cost += (-front.first);
 			if (-front.first <= r)
 				r_cost += (-front.first);
-			else if (-front.first > r)
+			else if (-front.first > r) {
 				rr_cost += (-front.first);
+				states++;
+			}
 
 			UnionSet(front.second.first, front.second.second);
 		}
 	}
-	//return mst_cost;
+	return states;
 }
 
 int main()
 {
-	int T, n, r, x, y, tot = 0;
+	int T, n, r, tot = 0;
+	double x, y;
 	cin >> T;
 
 	while (T--) {
@@ -75,25 +77,32 @@ int main()
 			d.push_back(ii(x, y));
 		}
 
-		int xs, ys, sq;
-		int states = 0;
+		double xs, ys, sq;		
 		for (auto i = 0; i < d.size(); ++i) {
 			for (auto j = 0; j < d.size(); ++j) {
 				if (i != j) {
 					xs = pow((d[j].first - d[i].first), 2);
 					ys = pow((d[j].second - d[i].second), 2);
-					sq = sqrt(xs + ys);
-					edgeList.push(make_pair(-sq, ii(i, j)));
+					
+					/********************************** Debug**************************************/
+					/*double sqq = sqrt(xs + ys);
+					cout << endl << sqq;
+					cin.get();*/
 
-					if (sq <= r)
-						states++;
+					/******************************************************************************/
+					//sq = sqrt(xs + ys) < 0.0 ? ceil(sqrt(xs + ys) - 0.5) : floor(sqrt(xs + ys) + 0.5);
+					sq = sqrt(xs + ys); //< 0.0 ? static_cast<int>(sqrt(xs + ys) - 0.5) : static_cast<int>(sqrt(xs + ys) + 0.5);
+					edgeList.push(make_pair(-sq, ii(i, j)));
 				}
 			}
 		}
 
 		//int res = TransportSystem();
-		int r_cost = 0, rr_cost = 0;
-		TransportSystem(r_cost, rr_cost, r);
+		double r_cost = 0, rr_cost = 0;
+		int states = TransportSystem(r_cost, rr_cost, r, n);
+		r_cost = static_cast<int>(r_cost + 0.5);
+		rr_cost = static_cast<int>(rr_cost + 0.5);
+
 		cout << "Case #" << ++tot << ": " << states << " " << r_cost << " " << rr_cost << endl;
 	}
 	
